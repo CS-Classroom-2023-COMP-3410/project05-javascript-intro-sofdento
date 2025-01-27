@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Story Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #story {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .choice-button:hover {
+            background-color: #0056b3;
+        }
+
+        #progress {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        #reset {
+            margin-top: 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #reset:hover {
+            background-color: #a71d2a;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Story Game</h1>
+    <div id="story"></div>
+    <div id="progress"></div>
+    <button id="reset">Reset</button>
+
+    <script>
+        const storyElement = document.getElementById('story');
+        const progressElement = document.getElementById('progress');
+        const resetButton = document.getElementById('reset');
+
+        const storyData = {
+            start: {
+                text: "You wake up in a mysterious forest. What do you do?",
+                choices: [
+                    { text: "Explore the forest", next: "forest" },
+                    { text: "Climb a tree", next: "tree" }
+                ]
+            },
+            forest: {
+                text: "You find a strange hut. Do you enter or walk away?",
+                choices: [
+                    { text: "Enter the hut", next: "hut" },
+                    { text: "Walk deeper into the forest", next: "deeper_forest" }
+                ]
+            },
+            tree: {
+                text: "From the tree, you spot a river and a smoke trail. Where do you go?",
+                choices: [
+                    { text: "Head to the river", next: "river" },
+                    { text: "Follow the smoke", next: "smoke" }
+                ]
+            },
+            hut: {
+                text: "Inside the hut, you find a treasure chest. Do you open it?",
+                choices: [
+                    { text: "Open the chest", next: "treasure" },
+                    { text: "Leave the hut", next: "outside_hut" }
+                ]
+            },
+            deeper_forest: {
+                text: "You encounter a wild animal. Do you run or try to calm it?",
+                choices: [
+                    { text: "Run", next: "run" },
+                    { text: "Calm the animal", next: "calm_animal" }
+                ]
+            },
+            river: {
+                text: "At the river, you find a boat. Do you cross the river or follow it downstream?",
+                choices: [
+                    { text: "Cross the river", next: "cross_river" },
+                    { text: "Follow downstream", next: "downstream" }
+                ]
+            },
+            smoke: {
+                text: "The smoke leads you to a campsite. Do you approach it or observe from afar?",
+                choices: [
+                    { text: "Approach the campsite", next: "campsite" },
+                    { text: "Observe from afar", next: "observe_campsite" }
+                ]
+            },
+            treasure: {
+                text: "You open the chest and find gold! You win! Congratulations!",
+                choices: [
+                    { text: "Restart", next: "start" }]
+            },
+            outside_hut: {
+                text: "You leave the hut and find yourself back at the start of the forest.",
+                choices: [
+                    { text: "Explore the forest again", next: "forest" },
+                    { text: "Climb a tree", next: "tree" }
+                ]
+            },
+            run: {
+                text: "You run and trip over a root, but manage to escape. What's next?",
+                choices: [
+                    { text: "Head towards a sound", next: "sound" },
+                    { text: "Climb a tree", next: "tree" }
+                ]
+            },
+            calm_animal: {
+                text: "The animal calms down and leads you to a hidden path. Follow it?",
+                choices: [
+                    { text: "Follow the path", next: "hidden_path" },
+                    { text: "Turn back", next: "start" }
+                ]
+            },
+            hidden_path: {
+                text: "The path leads to a hidden village where you live happily. The end!",
+                choices: [
+                    { text: "Restart", next: "start" }]
+            },
+            cross_river: {
+                text: "You cross the river and find a mysterious cave. Do you enter it?",
+                choices: [
+                    { text: "Enter the cave", next: "cave" },
+                    { text: "Stay outside", next: "outside_cave" }
+                ]
+            },
+            downstream: {
+                text: "Following downstream, you find a waterfall with a hidden passage. Explore?",
+                choices: [
+                    { text: "Explore the passage", next: "hidden_passage" },
+                    { text: "Keep walking", next: "keep_walking" }
+                ]
+            },
+            campsite: {
+                text: "The campsite is empty but looks recently used. Investigate further?",
+                choices: [
+                    { text: "Yes", next: "investigate_campsite" },
+                    { text: "No", next: "start" }
+                ]
+            },
+            observe_campsite: {
+                text: "You observe and see nothing unusual. What now?",
+                choices: [
+                    { text: "Approach", next: "campsite" },
+                    { text: "Walk away", next: "forest" }
+                ]
+            },
+            cave: {
+                text: "Inside the cave, you find ancient drawings and treasure. You've made a significant discovery! The end!",
+                choices: [
+                    { text: "Restart", next: "start" }]
+            },
+            outside_cave: {
+                text: "You stay outside and decide to rest by the river, finding peace in nature. The end!",
+                choices: [
+                    { text: "Restart", next: "start" }]
+            },
+            hidden_passage: {
+                text: "The passage leads to a hidden temple. You uncover its secrets and become famous. The end!",
+                choices: [
+                    { text: "Restart", next: "start" }]
+            },
+            keep_walking: {
+                text: "You keep walking and eventually find your way out of the forest. The end!",
+                choices: [
+                    { text: "Restart", next: "start" }]
+            },
+            investigate_campsite: {
+                text: "You find a journal with cryptic notes leading to a treasure. You win!",
+                choices: [
+                    { text: "Restart", next: "start" }]
+            }
+        };
+
+        let currentStep = localStorage.getItem('currentStep') || 'start';
+        let progress = JSON.parse(localStorage.getItem('progress')) || [];
+
+        function updateStory() {
+            const step = storyData[currentStep];
+            storyElement.innerHTML = `<p>${step.text}</p>`;
+            const choicesContainer = document.createElement('div');
+            choicesContainer.classList.add('choices');
+
+            step.choices.forEach(choice => {
+                const button = document.createElement('button');
+                button.textContent = choice.text;
+                button.classList.add('choice-button');
+                button.addEventListener('click', () => {
+                    progress.push(choice.text);
+                    currentStep = choice.next;
+                    saveProgress();
+                    updateStory();
+                });
+                choicesContainer.appendChild(button);
+            });
+
+            storyElement.appendChild(choicesContainer);
+            updateProgress();
+        }
+
+        function updateProgress() {
+            progressElement.textContent = `Progress: ${progress.join(' > ')}`;
+        }
+
+        function saveProgress() {
+            localStorage.setItem('currentStep', currentStep);
+            localStorage.setItem('progress', JSON.stringify(progress));
+        }
+
+        function resetGame() {
+            currentStep = 'start';
+            progress = [];
+            localStorage.removeItem('currentStep');
+            localStorage.removeItem('progress');
+            updateStory();
+        }
+
+        resetButton.addEventListener('click', resetGame);
+
+        updateStory();
+    </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #calculator {
+            display: grid;
+            grid-template-columns: repeat(4, 80px);
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .button {
+            width: 80px;
+            height: 80px;
+            background-color: #007bff;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        #display {
+            grid-column: span 4;
+            height: 60px;
+            font-size: 24px;
+            text-align: right;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #memory {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Virtual Calculator</h1>
+    <div id="memory"></div>
+    <div id="display">0</div>
+    <div id="calculator">
+        <button class="button" data-value="7">7</button>
+        <button class="button" data-value="8">8</button>
+        <button class="button" data-value="9">9</button>
+        <button class="button" data-value="/">&divide;</button>
+
+        <button class="button" data-value="4">4</button>
+        <button class="button" data-value="5">5</button>
+        <button class="button" data-value="6">6</button>
+        <button class="button" data-value="*">&times;</button>
+
+        <button class="button" data-value="1">1</button>
+        <button class="button" data-value="2">2</button>
+        <button class="button" data-value="3">3</button>
+        <button class="button" data-value="-">&minus;</button>
+
+        <button class="button" data-value="0">0</button>
+        <button class="button" data-value=".">.</button>
+        <button class="button" id="clear">C</button>
+        <button class="button" data-value="+">&plus;</button>
+
+        <button class="button" data-value="sqrt">&radic;</button>
+        <button class="button" data-value="%">%</button>
+        <button class="button" id="equals">=</button>
+
+        <button class="button" id="memory-add">M+</button>
+        <button class="button" id="memory-subtract">M-</button>
+        <button class="button" id="memory-recall">MR</button>
+        <button class="button" id="memory-clear">MC</button>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const buttons = document.querySelectorAll('.button');
+        const memoryDisplay = document.getElementById('memory');
+
+        let currentInput = '0';
+        let previousInput = '';
+        let operator = '';
+        let memory = 0; // Initialize memory to 0
+
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+
+        function updateMemoryDisplay() {
+            memoryDisplay.textContent = memory !== 0 ? `Memory: ${memory}` : '';
+        }
+
+        function handleNumber(num) {
+            if (currentInput === '0') {
+                currentInput = num;
+            } else {
+                currentInput += num;
+            }
+            updateDisplay();
+        }
+
+        function handleOperator(op) {
+            if (currentInput !== '' && previousInput === '') {
+                previousInput = currentInput;
+                currentInput = '';
+                operator = op;
+            } else if (currentInput !== '') {
+                calculate();
+                operator = op;
+            }
+        }
+
+        function calculate() {
+            if (previousInput === '' || operator === '') return;
+
+            const prev = parseFloat(previousInput);
+            const curr = parseFloat(currentInput);
+            let result;
+
+            switch (operator) {
+                case '+':
+                    result = prev + curr;
+                    break;
+                case '-':
+                    result = prev - curr;
+                    break;
+                case '*':
+                    result = prev * curr;
+                    break;
+                case '/':
+                    result = curr === 0 ? 'Error' : prev / curr;
+                    break;
+                case '%':
+                    result = prev % curr;
+                    break;
+                default:
+                    return;
+            }
+
+            currentInput = result.toString();
+            previousInput = '';
+            operator = '';
+            updateDisplay();
+        }
+
+        function handleSpecial(value) {
+            switch (value) {
+                case 'sqrt':
+                    currentInput = Math.sqrt(parseFloat(currentInput)).toString();
+                    updateDisplay();
+                    break;
+                case 'C':
+                    currentInput = '0';
+                    previousInput = '';
+                    operator = '';
+                    updateDisplay();
+                    break;
+                case '=':
+                    calculate();
+                    break;
+            }
+        }
+
+        // Memory button event listeners
+        document.getElementById('memory-add').addEventListener('click', () => {
+            memory += parseFloat(currentInput || '0');
+            updateMemoryDisplay();
+        });
+
+        document.getElementById('memory-subtract').addEventListener('click', () => {
+            memory -= parseFloat(currentInput || '0');
+            updateMemoryDisplay();
+        });
+
+        document.getElementById('memory-recall').addEventListener('click', () => {
+            currentInput = memory.toString();
+            updateDisplay();
+        });
+
+        document.getElementById('memory-clear').addEventListener('click', () => {
+            memory = 0;
+            updateMemoryDisplay();
+        });
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const value = button.dataset.value;
+                if (!isNaN(value) || value === '.') {
+                    handleNumber(value);
+                } else if (['+', '-', '*', '/', '%'].includes(value)) {
+                    handleOperator(value);
+                } else {
+                    handleSpecial(value);
+                }
+            });
+        });
+
+        document.getElementById('clear').addEventListener('click', () => {
+            currentInput = '0';
+            previousInput = '';
+            operator = '';
+            updateDisplay();
+        });
+
+        document.getElementById('equals').addEventListener('click', calculate);
+    </script>
+</body>
+</html>

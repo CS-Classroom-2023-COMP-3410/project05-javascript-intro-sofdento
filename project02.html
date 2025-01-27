@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive To-Do List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .todo-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .todo-input {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .todo-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+        }
+
+        .todo-input button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+
+        .todo-input button:hover {
+            background-color: #0056b3;
+        }
+
+        .filter-options {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .filter-options button {
+            border: none;
+            background-color: #ddd;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filter-options button.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .todo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f9f9f9;
+            cursor: grab;
+        }
+
+        .todo-item.completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        .todo-item button {
+            border: none;
+            background: red;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .todo-item button.complete {
+            background: green;
+        }
+
+        .todo-item button.edit {
+            background: orange;
+        }
+
+        .todo-item button:hover {
+            opacity: 0.8;
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="todo-container">
+        <h1>To-Do List</h1>
+        <div class="todo-input">
+            <input type="text" id="todo-input" placeholder="Add a new task">
+            <button id="add-btn">Add</button>
+        </div>
+        <div class="filter-options">
+            <button data-filter="all" class="active">All</button>
+            <button data-filter="completed">Completed</button>
+            <button data-filter="pending">Pending</button>
+        </div>
+        <ul id="todo-list"></ul>
+    </div>
+
+    <script>
+        const todoInput = document.getElementById('todo-input');
+        const addBtn = document.getElementById('add-btn');
+        const todoList = document.getElementById('todo-list');
+        const filterButtons = document.querySelectorAll('.filter-options button');
+
+        let todos = JSON.parse(localStorage.getItem('todos')) || [];
+        let draggingIndex = null;
+
+        function renderTodos(filter = 'all') {
+            todoList.innerHTML = '';
+            const filteredTodos = todos.filter(todo => {
+                if (filter === 'completed') return todo.completed;
+                if (filter === 'pending') return !todo.completed;
+                return true;
+            });
+
+            filteredTodos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                li.setAttribute('draggable', 'true');
+                li.dataset.index = index;
+
+                const span = document.createElement('span');
+                span.textContent = todo.text;
+
+                const completeBtn = document.createElement('button');
+                completeBtn.textContent = 'Complete';
+                completeBtn.className = 'complete';
+                completeBtn.addEventListener('click', () => toggleComplete(index));
+
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.className = 'edit';
+                editBtn.addEventListener('click', () => editTask(index));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.addEventListener('click', () => deleteTask(index));
+
+                li.appendChild(span);
+                li.appendChild(completeBtn);
+                li.appendChild(editBtn);
+                li.appendChild(deleteBtn);
+
+                li.addEventListener('dragstart', dragStart);
+                li.addEventListener('dragover', dragOver);
+                li.addEventListener('drop', drop);
+                li.addEventListener('dragend', dragEnd);
+
+                todoList.appendChild(li);
+            });
+
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+
+        function addTask() {
+            const text = todoInput.value.trim();
+            if (text) {
+                todos.push({ text, completed: false });
+                todoInput.value = '';
+                renderTodos();
+            }
+        }
+
+        function toggleComplete(index) {
+            todos[index].completed = !todos[index].completed;
+            renderTodos();
+        }
+
+        function editTask(index) {
+            const newText = prompt('Edit your task:', todos[index].text);
+            if (newText !== null) {
+                todos[index].text = newText.trim();
+                renderTodos();
+            }
+        }
+
+        function deleteTask(index) {
+            todos.splice(index, 1);
+            renderTodos();
+        }
+
+        function filterTasks(e) {
+            filterButtons.forEach(button => button.classList.remove('active'));
+            e.target.classList.add('active');
+            renderTodos(e.target.dataset.filter);
+        }
+
+        function dragStart(e) {
+            draggingIndex = e.target.dataset.index;
+            e.target.classList.add('dragging');
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+            const draggingElement = document.querySelector('.dragging');
+            const targetElement = e.target.closest('.todo-item');
+
+            if (targetElement && targetElement !== draggingElement) {
+                const targetIndex = targetElement.dataset.index;
+                const rect = targetElement.getBoundingClientRect();
+                const offset = e.clientY - rect.top;
+
+                if (offset > rect.height / 2) {
+                    targetElement.after(draggingElement);
+                } else {
+                    targetElement.before(draggingElement);
+                }
+            }
+        }
+
+        function drop(e) {
+            const newIndex = Array.from(todoList.children).indexOf(e.target);
+            const [draggedItem] = todos.splice(draggingIndex, 1);
+            todos.splice(newIndex, 0, draggedItem);
+            renderTodos();
+        }
+
+        function dragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggingIndex = null;
+        }
+
+        addBtn.addEventListener('click', addTask);
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+        filterButtons.forEach(button => button.addEventListener('click', filterTasks));
+
+        renderTodos();
+    </script>
+</body>
+</html>

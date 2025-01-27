@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizable Keyboard Trainer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #text-to-type {
+            font-size: 20px;
+            margin: 20px 0;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        #input-area {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .highlight {
+            background-color: yellow;
+        }
+
+        #results {
+            margin: 20px 0;
+            font-size: 16px;
+        }
+
+        #controls {
+            margin: 20px 0;
+        }
+
+        button, select {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        select {
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Customizable Keyboard Trainer</h1>
+
+    <div id="controls">
+        <label for="difficulty">Select Difficulty: </label>
+        <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+        <button id="start-game">Start</button>
+        <button id="reset-game">Reset</button>
+    </div>
+
+    <div id="text-to-type">Click "Start" to begin!</div>
+
+    <input id="input-area" type="text" placeholder="Start typing here..." disabled>
+
+    <div id="results"></div>
+
+    <script>
+        const textToTypeElement = document.getElementById('text-to-type');
+        const inputArea = document.getElementById('input-area');
+        const difficultySelect = document.getElementById('difficulty');
+        const startButton = document.getElementById('start-game');
+        const resetButton = document.getElementById('reset-game');
+        const resultsElement = document.getElementById('results');
+
+        let targetText = '';
+        let startTime = null;
+        let errorCount = 0;
+
+        const sentences = {
+            easy: [
+                "The cat sat on the mat.",
+                "I like to play games.",
+                "It is a sunny day."
+            ],
+            medium: [
+                "The quick brown fox jumps over the lazy dog.",
+                "She sells seashells by the seashore.",
+                "How much wood would a woodchuck chuck?"
+            ],
+            hard: [
+                "Supercalifragilisticexpialidocious is a long word.",
+                "Pseudopseudohypoparathyroidism is very complex.",
+                "The mitochondria is the powerhouse of the cell."
+            ]
+        };
+
+        function getRandomSentence(difficulty) {
+            const sentencePool = sentences[difficulty];
+            return sentencePool[Math.floor(Math.random() * sentencePool.length)];
+        }
+
+        function startGame() {
+            const difficulty = difficultySelect.value;
+            targetText = getRandomSentence(difficulty);
+            textToTypeElement.innerHTML = targetText
+                .split('')
+                .map(char => `<span>${char}</span>`)
+                .join('');
+
+            inputArea.value = '';
+            inputArea.disabled = false;
+            inputArea.focus();
+
+            startTime = new Date();
+            resultsElement.textContent = '';
+            errorCount = 0;
+        }
+
+        function highlightErrors() {
+            const inputText = inputArea.value;
+            const targetChars = textToTypeElement.querySelectorAll('span');
+
+            targetChars.forEach((charElement, index) => {
+                if (index < inputText.length) {
+                    if (inputText[index] === charElement.textContent) {
+                        charElement.classList.remove('error');
+                        charElement.classList.add('highlight');
+                    } else {
+                        charElement.classList.remove('highlight');
+                        charElement.classList.add('error');
+                        errorCount++;
+                    }
+                } else {
+                    charElement.classList.remove('highlight', 'error');
+                }
+            });
+
+            // Prevent backspace from being used
+            if (inputText.length > 0 && inputText[inputText.length - 1] !== targetText[inputText.length - 1]) {
+                inputArea.value = inputText.substring(0, inputText.length - 1);
+            }
+
+            if (inputText === targetText) {
+                inputArea.disabled = true;
+                calculateResults();
+            }
+        }
+
+        function calculateResults() {
+            const elapsedTime = (new Date() - startTime) / 1000; // Time in seconds
+            const wordsPerMinute = ((targetText.split(' ').length / elapsedTime) * 60).toFixed(2);
+            const accuracy = ((targetText.length - errorCount) / targetText.length * 100).toFixed(2);
+
+            resultsElement.innerHTML = `
+                <p>Time: ${elapsedTime.toFixed(2)} seconds</p>
+                <p>Words Per Minute (WPM): ${wordsPerMinute}</p>
+                <p>Accuracy: ${accuracy}%</p>
+            `;
+        }
+
+        function resetGame() {
+            targetText = '';
+            textToTypeElement.textContent = 'Click "Start" to begin!';
+            inputArea.value = '';
+            inputArea.disabled = true;
+            resultsElement.textContent = '';
+        }
+
+        inputArea.addEventListener('input', highlightErrors);
+        startButton.addEventListener('click', startGame);
+        resetButton.addEventListener('click', resetGame);
+
+        resetGame();
+    </script>
+</body>
+</html>

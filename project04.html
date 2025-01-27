@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Quiz App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .quiz-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .question {
+            margin-bottom: 20px;
+        }
+
+        .options {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .options li {
+            margin-bottom: 10px;
+        }
+
+        .options button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .options button:hover {
+            background-color: #0056b3;
+        }
+
+        .options button.selected {
+            background-color: #0056b3;
+        }
+
+        .summary {
+            display: none;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Quiz App</h1>
+        <div class="question-container">
+            <p class="question"></p>
+            <ul class="options"></ul>
+        </div>
+        <button id="next-btn" style="display: none;">Next</button>
+        <div class="summary">
+            <h2>Quiz Summary</h2>
+            <p id="score"></p>
+            <ul id="review"></ul>
+            <button id="restart-btn">Restart</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the capital of France?",
+                options: ["Berlin", "Madrid", "Paris", "Rome"],
+                answer: 2
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Earth", "Mars", "Jupiter", "Venus"],
+                answer: 1
+            },
+            {
+                question: "Who wrote 'Hamlet'?",
+                options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"],
+                answer: 1
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = [];
+
+        const questionElement = document.querySelector(".question");
+        const optionsElement = document.querySelector(".options");
+        const nextButton = document.getElementById("next-btn");
+        const summaryElement = document.querySelector(".summary");
+        const scoreElement = document.getElementById("score");
+        const reviewElement = document.getElementById("review");
+        const restartButton = document.getElementById("restart-btn");
+
+        function showQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            questionElement.textContent = currentQuestion.question;
+            optionsElement.innerHTML = "";
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.addEventListener("click", () => selectAnswer(button, index));
+                optionsElement.appendChild(button);
+            });
+        }
+
+        function selectAnswer(button, selectedIndex) {
+            userAnswers[currentQuestionIndex] = selectedIndex;
+            const correctIndex = questions[currentQuestionIndex].answer;
+
+            // Highlight selected button and remove highlight from others
+            const buttons = optionsElement.querySelectorAll("button");
+            buttons.forEach(btn => btn.classList.remove("selected"));
+            button.classList.add("selected");
+
+            if (selectedIndex === correctIndex) {
+                score++;
+            }
+            nextButton.style.display = "block";
+        }
+
+        function showSummary() {
+            summaryElement.style.display = "block";
+            questionElement.parentElement.style.display = "none";
+            nextButton.style.display = "none";
+            scoreElement.textContent = `You scored ${score} out of ${questions.length}.`;
+
+            reviewElement.innerHTML = "";
+            questions.forEach((q, index) => {
+                const listItem = document.createElement("li");
+                const userAnswer = userAnswers[index] !== undefined ? q.options[userAnswers[index]] : "No answer";
+                const correctAnswer = q.options[q.answer];
+                listItem.innerHTML = `<strong>Q: ${q.question}</strong><br>Your answer: ${userAnswer}<br>Correct answer: ${correctAnswer}`;
+                reviewElement.appendChild(listItem);
+            });
+        }
+
+        nextButton.addEventListener("click", () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                nextButton.style.display = "none";
+                showQuestion();
+            } else {
+                showSummary();
+            }
+        });
+
+        restartButton.addEventListener("click", () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            summaryElement.style.display = "none";
+            questionElement.parentElement.style.display = "block";
+            showQuestion();
+        });
+
+        showQuestion();
+    </script>
+</body>
+</html>
