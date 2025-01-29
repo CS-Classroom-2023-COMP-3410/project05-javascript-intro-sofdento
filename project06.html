@@ -10,30 +10,32 @@
             margin: 0;
             padding: 20px;
             background-color: #f4f4f4;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            text-align: center;
         }
-
+        
         h1 {
             margin-bottom: 20px;
         }
-
+        
         .search {
             margin-bottom: 20px;
+            padding: 8px;
+            width: 250px;
+            font-size: 16px;
         }
-
+        
         #periodic-table {
             display: grid;
-            grid-template-columns: repeat(18, 50px);
+            grid-template-columns: repeat(18, minmax(25px, 45px));
+            grid-template-rows: repeat(9, minmax(25px, 45px));
             gap: 2px;
-            margin: 20px 0;
             justify-content: center;
+            margin-top: 10px;
         }
-
+        
         .element {
-            width: 50px;
-            height: 50px;
+            width: 100%;
+            height: 100%;
             background-color: #007bff;
             color: white;
             display: flex;
@@ -41,48 +43,65 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            border-radius: 5px;
+            border-radius: 3px;
             font-size: 12px;
             cursor: pointer;
         }
 
-        .element strong {
-            font-size: 14px;
+        @media (max-width: 600px){
+            #periodic-table{
+                grid-template-columns: repeat(18, minmax(20px, 35px));
+                grid-template-rows: repeat(10, minmax(20px, 35px));
+            }
         }
 
+        .element {
+            font-size: 10px;
+        }
+
+        .element strong {
+            font-size: 12px;
+        }
+        
         .element:hover {
             background-color: #0056b3;
         }
-
+        
         .selected {
             background-color: #28a745;
         }
-
+        
+        .highlight-group {
+            background-color: #ffc107 !important;
+        }
+        
         .empty {
             background-color: transparent;
             pointer-events: none;
         }
-
+        
         #details {
             margin-top: 20px;
-            padding: 10px;
+            padding: 8px;
             background-color: white;
             border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 300px;
+            border-radius: 3px;
+            width: 250px;
+            display: none;
             text-align: center;
+            font-size: 12px;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
-        .hidden {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <h1>Interactive Periodic Table</h1>
     <input class="search" type="text" id="search" placeholder="Search by name, symbol, or atomic number">
     <div id="periodic-table"></div>
-    <div id="details" class="hidden">
+    <div id="details">
         <h2 id="element-name"></h2>
         <p>Symbol: <span id="element-symbol"></span></p>
         <p>Atomic Number: <span id="atomic-number"></span></p>
@@ -90,181 +109,179 @@
     </div>
 
     <script>
-       const elements = [
-    { name: "Hydrogen", symbol: "H", atomicNumber: 1, group: "1" },
-    { name: "Helium", symbol: "He", atomicNumber: 2, group: "18" },
-    { name: "Lithium", symbol: "Li", atomicNumber: 3, group: "1" },
-    { name: "Beryllium", symbol: "Be", atomicNumber: 4, group: "2" },
-    { name: "Boron", symbol: "B", atomicNumber: 5, group: "13" },
-    { name: "Carbon", symbol: "C", atomicNumber: 6, group: "14" },
-    { name: "Nitrogen", symbol: "N", atomicNumber: 7, group: "15" },
-    { name: "Oxygen", symbol: "O", atomicNumber: 8, group: "16" },
-    { name: "Fluorine", symbol: "F", atomicNumber: 9, group: "17" },
-    { name: "Neon", symbol: "Ne", atomicNumber: 10, group: "18" },
-    { name: "Sodium", symbol: "Na", atomicNumber: 11, group: "1" },
-    { name: "Magnesium", symbol: "Mg", atomicNumber: 12, group: "2" },
-    { name: "Aluminium", symbol: "Al", atomicNumber: 13, group: "13" },
-    { name: "Silicon", symbol: "Si", atomicNumber: 14, group: "14" },
-    { name: "Phosphorus", symbol: "P", atomicNumber: 15, group: "15" },
-    { name: "Sulfur", symbol: "S", atomicNumber: 16, group: "16" },
-    { name: "Chlorine", symbol: "Cl", atomicNumber: 17, group: "17" },
-    { name: "Argon", symbol: "Ar", atomicNumber: 18, group: "18" },
-    { name: "Potassium", symbol: "K", atomicNumber: 19, group: "1" },
-    { name: "Calcium", symbol: "Ca", atomicNumber: 20, group: "2" },
-    { name: "Scandium", symbol: "Sc", atomicNumber: 21, group: "3" },
-    { name: "Titanium", symbol: "Ti", atomicNumber: 22, group: "4" },
-    { name: "Vanadium", symbol: "V", atomicNumber: 23, group: "5" },
-    { name: "Chromium", symbol: "Cr", atomicNumber: 24, group: "6" },
-    { name: "Manganese", symbol: "Mn", atomicNumber: 25, group: "7" },
-    { name: "Iron", symbol: "Fe", atomicNumber: 26, group: "8" },
-    { name: "Cobalt", symbol: "Co", atomicNumber: 27, group: "9" },
-    { name: "Nickel", symbol: "Ni", atomicNumber: 28, group: "10" },
-    { name: "Copper", symbol: "Cu", atomicNumber: 29, group: "11" },
-    { name: "Zinc", symbol: "Zn", atomicNumber: 30, group: "12" },
-    { name: "Gallium", symbol: "Ga", atomicNumber: 31, group: "13" },
-    { name: "Germanium", symbol: "Ge", atomicNumber: 32, group: "14" },
-    { name: "Arsenic", symbol: "As", atomicNumber: 33, group: "15" },
-    { name: "Selenium", symbol: "Se", atomicNumber: 34, group: "16" },
-    { name: "Bromine", symbol: "Br", atomicNumber: 35, group: "17" },
-    { name: "Krypton", symbol: "Kr", atomicNumber: 36, group: "18" },
-    { name: "Rubidium", symbol: "Rb", atomicNumber: 37, group: "1" },
-    { name: "Strontium", symbol: "Sr", atomicNumber: 38, group: "2" },
-    { name: "Yttrium", symbol: "Y", atomicNumber: 39, group: "3" },
-    { name: "Zirconium", symbol: "Zr", atomicNumber: 40, group: "4" },
-    { name: "Niobium", symbol: "Nb", atomicNumber: 41, group: "5" },
-    { name: "Molybdenum", symbol: "Mo", atomicNumber: 42, group: "6" },
-    { name: "Technetium", symbol: "Tc", atomicNumber: 43, group: "7" },
-    { name: "Ruthenium", symbol: "Ru", atomicNumber: 44, group: "8" },
-    { name: "Rhodium", symbol: "Rh", atomicNumber: 45, group: "9" },
-    { name: "Palladium", symbol: "Pd", atomicNumber: 46, group: "10" },
-    { name: "Silver", symbol: "Ag", atomicNumber: 47, group: "11" },
-    { name: "Cadmium", symbol: "Cd", atomicNumber: 48, group: "12" },
-    { name: "Indium", symbol: "In", atomicNumber: 49, group: "13" },
-    { name: "Tin", symbol: "Sn", atomicNumber: 50, group: "14" },
-    { name: "Antimony", symbol: "Sb", atomicNumber: 51, group: "15" },
-    { name: "Tellurium", symbol: "Te", atomicNumber: 52, group: "16" },
-    { name: "Iodine", symbol: "I", atomicNumber: 53, group: "17" },
-    { name: "Xenon", symbol: "Xe", atomicNumber: 54, group: "18" },
-    { name: "Cesium", symbol: "Cs", atomicNumber: 55, group: "1" },
-    { name: "Barium", symbol: "Ba", atomicNumber: 56, group: "2" },
-    { name: "Lanthanum", symbol: "La", atomicNumber: 57, group: "3" },
-    { name: "Cerium", symbol: "Ce", atomicNumber: 58, group: "3" },
-    { name: "Praseodymium", symbol: "Pr", atomicNumber: 59, group: "3" },
-    { name: "Neodymium", symbol: "Nd", atomicNumber: 60, group: "3" },
-    { name: "Promethium", symbol: "Pm", atomicNumber: 61, group: "3" },
-    { name: "Samarium", symbol: "Sm", atomicNumber: 62, group: "3" },
-    { name: "Europium", symbol: "Eu", atomicNumber: 63, group: "3" },
-    { name: "Gadolinium", symbol: "Gd", atomicNumber: 64, group: "3" },
-    { name: "Terbium", symbol: "Tb", atomicNumber: 65, group: "3" },
-    { name: "Dysprosium", symbol: "Dy", atomicNumber: 66, group: "3" },
-    { name: "Holmium", symbol: "Ho", atomicNumber: 67, group: "3" },
-    { name: "Erbium", symbol: "Er", atomicNumber: 68, group: "3" },
-    { name: "Thulium", symbol: "Tm", atomicNumber: 69, group: "3" },
-    { name: "Ytterbium", symbol: "Yb", atomicNumber: 70, group: "3" },
-    { name: "Lutetium", symbol: "Lu", atomicNumber: 71, group: "3" },
-    { name: "Hafnium", symbol: "Hf", atomicNumber: 72, group: "4" },
-    { name: "Tantalum", symbol: "Ta", atomicNumber: 73, group: "5" },
-    { name: "Tungsten", symbol: "W", atomicNumber: 74, group: "6" },
-    { name: "Rhenium", symbol: "Re", atomicNumber: 75, group: "7" },
-    { name: "Osmium", symbol: "Os", atomicNumber: 76, group: "8" },
-    { name: "Iridium", symbol: "Ir", atomicNumber: 77, group: "9" },
-    { name: "Platinum", symbol: "Pt", atomicNumber: 78, group: "10" },
-    { name: "Gold", symbol: "Au", atomicNumber: 79, group: "11" },
-    { name: "Mercury", symbol: "Hg", atomicNumber: 80, group: "12" },
-    { name: "Thallium", symbol: "Tl", atomicNumber: 81, group: "13" },
-    { name: "Lead", symbol: "Pb", atomicNumber: 82, group: "14" },
-    { name: "Bismuth", symbol: "Bi", atomicNumber: 83, group: "15" },
-    { name: "Polonium", symbol: "Po", atomicNumber: 84, group: "16" },
-    { name: "Astatine", symbol: "At", atomicNumber: 85, group: "17" },
-    { name: "Radon", symbol: "Rn", atomicNumber: 86, group: "18" },
-    { name: "Francium", symbol: "Fr", atomicNumber: 87, group: "1" },
-    { name: "Radium", symbol: "Ra", atomicNumber: 88, group: "2" },
-    { name: "Actinium", symbol: "Ac", atomicNumber: 89, group: "3" },
-    { name: "Thorium", symbol: "Th", atomicNumber: 90, group: "3" },
-    { name: "Protactinium", symbol: "Pa", atomicNumber: 91, group: "3" },
-    { name: "Uranium", symbol: "U", atomicNumber: 92, group: "3" },
-    { name: "Neptunium", symbol: "Np", atomicNumber: 93, group: "3" },
-    { name: "Plutonium", symbol: "Pu", atomicNumber: 94, group: "3" },
-    { name: "Americium", symbol: "Am", atomicNumber: 95, group: "3" },
-    { name: "Curium", symbol: "Cm", atomicNumber: 96, group: "3" },
-    { name: "Berkelium", symbol: "Bk", atomicNumber: 97, group: "3" },
-    { name: "Californium", symbol: "Cf", atomicNumber: 98, group: "3" },
-    { name: "Einsteinium", symbol: "Es", atomicNumber: 99, group: "3" },
-    { name: "Fermium", symbol: "Fm", atomicNumber: 100, group: "3" },
-    { name: "Mendelevium", symbol: "Md", atomicNumber: 101, group: "3" },
-    { name: "Nobelium", symbol: "No", atomicNumber: 102, group: "3" },
-    { name: "Lawrencium", symbol: "Lr", atomicNumber: 103, group: "3" },
-    { name: "Rutherfordium", symbol: "Rf", atomicNumber: 104, group: "4" },
-    { name: "Dubnium", symbol: "Db", atomicNumber: 105, group: "5" },
-    { name: "Seaborgium", symbol: "Sg", atomicNumber: 106, group: "6" },
-    { name: "Bohrium", symbol: "Bh", atomicNumber: 107, group: "7" },
-    { name: "Hassium", symbol: "Hs", atomicNumber: 108, group: "8" },
-    { name: "Meitnerium", symbol: "Mt", atomicNumber: 109, group: "9" },
-    { name: "Darmstadtium", symbol: "Ds", atomicNumber: 110, group: "10" },
-    { name: "Roentgenium", symbol: "Rg", atomicNumber: 111, group: "11" },
-    { name: "Copernicium", symbol: "Cn", atomicNumber: 112, group: "12" },
-    { name: "Nihonium", symbol: "Nh", atomicNumber: 113, group: "13" },
-    { name: "Flerovium", symbol: "Fl", atomicNumber: 114, group: "14" },
-    { name: "Moscovium", symbol: "Mc", atomicNumber: 115, group: "15" },
-    { name: "Livermorium", symbol: "Lv", atomicNumber: 116, group: "16" },
-    { name: "Tennessine", symbol: "Ts", atomicNumber: 117, group: "17" },
-    { name: "Oganesson", symbol: "Og", atomicNumber: 118, group: "18" }
-];
+        const elements = [
+            { name: "Hydrogen", symbol: "H", atomicNumber: 1, group: "1", position: [1, 1] },
+            { name: "Helium", symbol: "He", atomicNumber: 2, group: "18", position: [1, 18] },
+            { name: "Lithium", symbol: "Li", atomicNumber: 3, group: "1", position: [2, 1] },
+            { name: "Beryllium", symbol: "Be", atomicNumber: 4, group: "2", position: [2, 2] },
+            { name: "Boron", symbol: "B", atomicNumber: 5, group: "13", position: [2, 13] },
+            { name: "Carbon", symbol: "C", atomicNumber: 6, group: "14", position: [2, 14] },
+            { name: "Nitrogen", symbol: "N", atomicNumber: 7, group: "15", position: [2, 15] },
+            { name: "Oxygen", symbol: "O", atomicNumber: 8, group: "16", position: [2, 16] },
+            { name: "Fluorine", symbol: "F", atomicNumber: 9, group: "17", position: [2, 17] },
+            { name: "Neon", symbol: "Ne", atomicNumber: 10, group: "18", position: [2, 18] },
+            { name: "Sodium", symbol: "Na", atomicNumber: 11, group: "1", position: [3, 1] },
+            { name: "Magnesium", symbol: "Mg", atomicNumber: 12, group: "2", position: [3,2] },
+            {name: "Aluminum", symbol: "Al", atomicNumber: 13, group: "13", position: [3, 13]},
+            {name: "Silicon", symbol: "Si", atomicNumber: 14, group: "14", position: [3, 14]},
+            {name: "Phosphorus", symbol: "P", atomicNumber: 15, group: "15", position: [3, 15]},
+            {name: "Sulfur", symbol: "S", atomicNumber: 16, group: "16", position: [3, 16]},
+            {name: "Chlorine", symbol: "Cl", atomicNumber: 17, group: "17", position: [3, 17]},
+            {name: "Argon", symbol: "Ar", atomicNumber: 18, group: "18", position: [3, 18]},
+            {name: "Potassium", symbol: "K", atomicNumber: 19, group: "1", position: [4, 1]},
+            {name: "Calcium", symbol: "Ca", atomicNumber: 20, group: "2", position: [4, 2]},
+            {name: "Scandium", symbol: "Sc", atomicNumber: 21, group: "3", position: [4, 3]},
+            {name: "Titanium", symbol: "Ti", atomicNumber: 22, group: "4", position: [4, 4]},
+            {name: "Vanadium", symbol: "V", atomicNumber: 23, group: "5", position: [4, 5]},
+            {name: "Chromium", symbol: "Cr", atomicNumber: 24, group: "6", position: [4, 6]},
+            {name: "Manganese", symbol: "Mn", atomicNumber: 25, group: "7", position: [4, 7]},
+            {name: "Iron", symbol: "Fe", atomicNumber: 26, group: "8", position: [4, 8]},
+            {name: "Cobalt", symbol: "Co", atomicNumber: 27, group: "9", position: [4, 9]},
+            {name: "Nickel", symbol: "Ni", atomicNumber: 28, group: "10", position: [4, 10]},
+            {name: "Copper", symbol: "Cu", atomicNumber: 29, group: "11", position: [4, 11]},
+            {name: "Zinc", symbol: "Zn", atomicNumber: 30, group: "12", position: [4, 12]},
+            {name: "Gallium", symbol: "Ga", atomicNumber: 31, group: "13", position: [4, 13]},
+            {name: "Germanium", symbol: "Ge", atomicNumber: 32, group: "14", position: [4, 14]},
+            {name: "Arsenic", symbol: "As", atomicNumber: 33, group: "15", position: [4, 15]},
+            {name: "Selenium", symbol: "Se", atomicNumber: 34, group: "16", position: [4, 16]},
+            {name: "Bromine", symbol: "Br", atomicNumber: 35, group: "17", position: [4, 17]},
+            {name: "Krypton", symbol: "Kr", atomicNumber: 36, group: "18", position: [4, 18]},
+            {name: "Rubidium", symbol: "Rb", atomicNumber: 37, group: "1", position: [5, 1]},
+            {name: "Strontium", symbol: "Sr", atomicNumber: 38, group: "2", position: [5, 2]},
+            {name: "Yttrium", symbol: "Y", atomicNumber: 39, group: "3", position: [5, 3]},
+            {name: "Zirconium", symbol: "Zr", atomicNumber: 40, group: "4", position: [5, 4]},
+            {name: "Niobium", symbol: "Nb", atomicNumber: 41, group: "5", position: [5, 5]},
+            {name: "Molybdenum", symbol: "Mo", atomicNumber: 42, group: "6", position: [5, 6]},
+            {name: "Technetium", symbol: "Tc", atomicNumber: 43, group: "7", position: [5, 7]},
+            {name: "Ruthenium", symbol: "Ru", atomicNumber: 44, group: "8", position: [5, 8]},
+            {name: "Rhodium", symbol: "Rh", atomicNumber: 45, group: "9", position: [5, 9]},
+            {name: "Palladium", symbol: "Pd", atomicNumber: 46, group: "10", position: [5, 10]},
+            {name: "Silver", symbol: "Ag", atomicNumber: 47, group: "11", position: [5, 11]},
+            {name: "Cadmium", symbol: "Cd", atomicNumber: 48, group: "12", position: [5, 12]},
+            {name: "Indium", symbol: "In", atomicNumber: 49, group: "13", position: [5, 13]},
+            {name: "Tin", symbol: "Sn", atomicNumber: 50, group: "14", position: [5, 14]},
+            {name: "Antimony", symbol: "Sb", atomicNumber: 51, group: "15", position: [5, 15]},
+            {name: "Tellurium", symbol: "Te", atomicNumber: 52, group: "16", position: [5, 16]},
+            {name: "Iodine", symbol: "I", atomicNumber: 53, group: "17", position: [5, 17]},
+            {name: "Xenon", symbol: "Xe", atomicNumber: 54, group: "18", position: [5, 18]},
+            {name: "Cesium", symbol: "Cs", atomicNumber: 55, group: "1", position: [6, 1]},
+            {name: "Barium", symbol: "Ba", atomicNumber: 56, group: "2", position: [6, 2]},
+            {name: "Lanthanum", symbol: "La", atomicNumber: 57, group: "L", position: [8, 3]},
+            {name: "Cerium", symbol: "Ce", atomicNumber: 58, group: "L", position: [8, 4]},
+            {name: "Praseodymium", symbol: "Pr", atomicNumber: 59, group: "L", position: [8, 5]},
+            {name: "Neodymium", symbol: "Nd", atomicNumber: 60, group: "L", position: [8, 6]},
+            {name: "Promethium", symbol: "Pm", atomicNumber: 61, group: "L", position: [8, 7]},
+            {name: "Samarium", symbol: "Sm", atomicNumber: 62, group: "L", position: [8, 8]},
+            {name: "Europium", symbol: "Eu", atomicNumber: 63, group: "L", position: [8, 9]},
+            {name: "Gadolinium", symbol: "Gd", atomicNumber: 64, group: "L", position: [8, 10]},
+            {name: "Terbium", symbol: "Tb", atomicNumber: 65, group: "L", position: [8, 11]},
+            {name: "Dysprosium", symbol: "Dy", atomicNumber: 66, group: "L", position: [8, 12]},
+            {name: "Holmium", symbol: "Ho", atomicNumber: 67, group: "L", position: [8, 13]},
+            {name: "Erbium", symbol: "Er", atomicNumber: 68, group: "L", position: [8, 14]},
+            {name: "Thulium", symbol: "Tm", atomicNumber: 69, group: "L", position: [8, 15]},
+            {name: "Ytterbium", symbol: "Yb", atomicNumber: 70, group: "L", position: [8, 16]},
+            {name: "Lutetium", symbol: "Lu", atomicNumber: 71, group: "L", position: [8, 17]},
+            {name: "Hafnium", symbol: "Hf", atomicNumber: 72, group: "4", position: [6, 4]},
+            {name: "Tantalum", symbol: "Ta", atomicNumber: 73, group: "5", position: [6, 5]},
+            {name: "Tungsten", symbol: "W", atomicNumber: 74, group: "6", position: [6, 6]},
+            {name: "Rhenium", symbol: "Re", atomicNumber: 75, group: "7", position: [6, 7]},
+            {name: "Osmium", symbol: "Os", atomicNumber: 76, group: "8", position: [6, 8]},
+            {name: "Iridium", symbol: "Ir", atomicNumber: 77, group: "9", position: [6, 9]},
+            {name: "Platinum", symbol: "Pt", atomicNumber: 78, group: "10", position: [6, 10]},
+            {name: "Gold", symbol: "Au", atomicNumber: 79, group: "11", position: [6, 11]},
+            {name: "Mercury", symbol: "Hg", atomicNumber: 80, group: "12", position: [6, 12]},
+            {name: "Thallium", symbol: "Tl", atomicNumber: 81, group: "13", position: [6, 13]},
+            {name: "Lead", symbol: "Pb", atomicNumber: 82, group: "14", position: [6, 14]},
+            {name: "Bismuth", symbol: "Bi", atomicNumber: 83, group: "15", position: [6, 15]},
+            {name: "Polonium", symbol: "Po", atomicNumber: 84, group: "16", position: [6, 16]},
+            {name: "Astatine", symbol: "At", atomicNumber: 85, group: "17", position: [6, 17]},
+            {name: "Radon", symbol: "Rn", atomicNumber: 86, group: "18", position: [6, 18]},
+            {name: "Francium", symbol: "Fr", atomicNumber: 87, group: "1", position: [7, 1]},
+            {name: "Radium", symbol: "Ra", atomicNumber: 88, group: "2", position: [7, 2]},
+            {name: "Actinium", symbol: "Ac", atomicNumber: 89, group: "A", position: [9, 3]},
+            {name: "Thorium", symbol: "Th", atomicNumber: 90, group: "A", position: [9, 4]},
+            {name: "Protactinium", symbol: "Pa", atomicNumber: 91, group: "A", position: [9, 5]},
+            {name: "Uranium", symbol: "U", atomicNumber: 92, group: "A", position: [9, 6]},
+            {name: "Neptunium", symbol: "Np", atomicNumber: 93, group: "A", position: [9, 7]},
+            {name: "Plutonium", symbol: "Pu", atomicNumber: 94, group: "A", position: [9, 8]},
+            {name: "Americium", symbol: "Am", atomicNumber: 95, group: "A", position: [9, 9]},
+            {name: "Curium", symbol: "Cm", atomicNumber: 96, group: "A", position: [9, 10]},
+            {name: "Berkelium", symbol: "Bk", atomicNumber: 97, group: "A", position: [9, 11]},
+            {name: "Californium", symbol: "Cf", atomicNumber: 98, group: "A", position: [9, 12]},
+            {name: "Einsteinium", symbol: "Es", atomicNumber: 99, group: "A", position: [9, 13]},
+            {name: "Fermium", symbol: "Fm", atomicNumber: 100, group: "A", position: [9, 14]},
+            {name: "Mendelevium", symbol: "Md", atomicNumber: 101, group: "A", position: [9, 15]},
+            {name: "Nobelium", symbol: "No", atomicNumber: 102, group: "A", position: [9, 16]},
+            {name: "Lawrencium", symbol: "Lr", atomicNumber: 103, group: "A", position: [9, 17]},
+            {name: "Rutherfordium", symbol: "Rf", atomicNumber: 104, group: "4", position: [7, 4]},
+            {name: "Dubnium", symbol: "Db", atomicNumber: 105, group: "5", position: [7, 5]},
+            {name: "Seaborgium", symbol: "Sg", atomicNumber: 106, group: "6", position: [7, 6]},
+            {name: "Bohrium", symbol: "Bh", atomicNumber: 107, group: "7", position: [7, 7]},
+            {name: "Hassium", symbol: "Hs", atomicNumber: 108, group: "8", position: [7, 8]},
+            {name: "Meitnerium", symbol: "Mt", atomicNumber: 109, group: "9", position: [7, 9]},
+            {name: "Darmstadtium", symbol: "Ds", atomicNumber: 110, group: "10", position: [7, 10]},
+            {name: "Roentgenium", symbol: "Rg", atomicNumber: 111, group: "11", position: [7, 11]},
+            {name: "Copernicium", symbol: "Cn", atomicNumber: 112, group: "12", position: [7, 12]},
+            {name: "Nihonium", symbol: "Nh", atomicNumber: 113, group: "13", position: [7, 13]},
+            {name: "Flerovium", symbol: "Fl", atomicNumber: 114, group: "14", position: [7, 14]},
+            {name: "Moscovium", symbol: "Mc", atomicNumber: 115, group: "15", position: [7, 15]},
+            {name: "Livermorium", symbol: "Lv", atomicNumber: 116, group: "16", position: [7, 16]},
+            {name: "Tennessine", symbol: "Ts", atomicNumber: 117, group: "17", position: [7, 17]},
+            {name: "Oganesson", symbol: "Og", atomicNumber: 118, group: "18", position: [7, 18]}
+        ];
+
+        const periodicTable = document.getElementById('periodic-table');
+        
+        function createPeriodicTable() {
+            periodicTable.innerHTML = '';
+            for (let row = 1; row <= 9; row++) { // Rows up to 7 for now (Lanthanides and Actinides will go separately)
+                for (let col = 1; col <= 18; col++) {
+                    const element = elements.find(e => e.position[0] === row && e.position[1] === col);
+                    const div = document.createElement('div');
+                    
+                    div.classList.add('element');
+                    
+                    if (element) {
+                        div.dataset.name = element.name.toLowerCase();
+                        div.dataset.symbol = element.symbol.toLowerCase();
+                        div.dataset.atomicNumber = element.atomicNumber.toString();
+                        div.dataset.group = element.group;
+                        div.innerHTML = `<strong>${element.symbol}</strong><br>${element.atomicNumber}`;
+                        div.addEventListener('click', () => displayDetails(element, div));
+                    } else {
+                        div.classList.add('empty'); // Show empty placeholders to maintain the grid structure
+                    }
+                    
+                    periodicTable.appendChild(div);
+                }
+            }
+        }
+
+        
+        function displayDetails(element, selectedElement) {
+            document.querySelectorAll('.element').forEach(el => el.classList.remove('selected', 'highlight-group'));
+
+            // Highlight all elements in the same group
+            document.querySelectorAll(`.element[data-group='${element.group}']`).forEach(el => {
+                el.classList.add('highlight-group');
+            });
+
+            selectedElement.classList.add('selected');
+            
+            // Display element details
+            document.getElementById('element-name').textContent = element.name;
+            document.getElementById('element-symbol').textContent = element.symbol;
+            document.getElementById('atomic-number').textContent = element.atomicNumber;
+            document.getElementById('element-group').textContent = element.group;
+            
+            // Show details and keep it centered
+            const detailsBox = document.getElementById('details');
+            detailsBox.style.display = 'block';
+        }
 
 
-const periodicTable = document.getElementById('periodic-table');
-const details = document.getElementById('details');
-const elementName = document.getElementById('element-name');
-const elementSymbol = document.getElementById('element-symbol');
-const atomicNumber = document.getElementById('atomic-number');
-const elementGroup = document.getElementById('element-group');
-const searchInput = document.getElementById('search');
 
-function createPeriodicTable() {
-    periodicTable.innerHTML = '';
-    elements.forEach(element => {
-        const div = document.createElement('div');
-        div.classList.add('element');
-        div.dataset.name = element.name.toLowerCase();
-        div.dataset.symbol = element.symbol.toLowerCase();
-        div.dataset.atomicNumber = element.atomicNumber.toString();
-        div.dataset.group = element.group;
-
-        div.innerHTML = `<strong>${element.symbol}</strong><br>${element.atomicNumber}`;
-
-        div.addEventListener('click', () => displayDetails(element, div));
-
-        periodicTable.appendChild(div);
-    });
-}
-
-function displayDetails(element, selectedElement) {
-    document.querySelectorAll('.element').forEach(el => el.classList.remove('selected'));
-    selectedElement.classList.add('selected');
-
-    elementName.textContent = element.name;
-    elementSymbol.textContent = element.symbol;
-    atomicNumber.textContent = element.atomicNumber;
-    elementGroup.textContent = element.group;
-
-    details.classList.remove('hidden');
-}
-
-function filterElements() {
-    const query = searchInput.value.toLowerCase();
-    document.querySelectorAll('.element').forEach(el => {
-        const matches =
-            el.dataset.name.includes(query) ||
-            el.dataset.symbol.includes(query) ||
-            el.dataset.atomicNumber.includes(query);
-        el.style.display = matches ? 'flex' : 'none';
-    });
-}
-
-searchInput.addEventListener('input', filterElements);
-
-createPeriodicTable();
-
+        createPeriodicTable();
     </script>
 </body>
 </html>
